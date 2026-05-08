@@ -1,7 +1,11 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [],
+  },
+  // Allow server-only packages in API routes
+  serverExternalPackages: ['@anthropic-ai/sdk'],
 };
 
 export default nextConfig;
