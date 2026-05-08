@@ -11,9 +11,7 @@ Find where your AI budget is leaking. Free 2-minute audit for engineering manage
 ## Screenshots & Demo
 
 Landing page · Audit form · Results with savings breakdown  
-<div align="center">
-  <img src="https://raw.githubusercontent.com/vishalreddy20/journal/master/public/demo.webp" alt="SpendLens Demo Walkthrough" width="800"/>
-</div>
+![SpendLens Demo Walkthrough](./public/demo.webp)
 
 ---
 
