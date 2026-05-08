@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { Resend } from 'resend';
 import { checkRateLimit, getIp } from '@/lib/rateLimit';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy Resend — only created when actually used, not at module load
+function getResend(): Resend {
+  return new Resend(process.env.RESEND_API_KEY ?? '');
+}
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -49,15 +52,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Audit ID required' }, { status: 400 });
   }
 
+  const supabase = getSupabaseAdmin();
+
   // Fetch audit context (for personalized email)
-  const { data: audit } = await supabaseAdmin
+  const { data: audit } = await supabase
     .from('audits')
     .select('total_monthly_savings, is_credex_relevant, id')
     .eq('id', body.auditId)
     .single();
 
   // Save lead to database
-  const { error: leadError } = await supabaseAdmin.from('leads').insert({
+  const { error: leadError } = await supabase.from('leads').insert({
     audit_id: body.auditId,
     email: body.email,
     company_name: body.companyName ?? null,
@@ -77,7 +82,7 @@ export async function POST(req: NextRequest) {
   const auditUrl = `${process.env.NEXT_PUBLIC_APP_URL}/audit/${body.auditId}`;
 
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: 'SpendLens <onboarding@resend.dev>',
       to: body.email,
       subject: 'Your AI Spend Audit — SpendLens',
@@ -95,8 +100,8 @@ export async function POST(req: NextRequest) {
       
       <div style="background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2); border-radius: 8px; padding: 24px; margin: 0 0 24px;">
         <p style="color: #94a3b8; font-size: 14px; margin: 0 0 8px;">POTENTIAL MONTHLY SAVINGS</p>
-        <p style="color: #00D4FF; font-size: 36px; font-weight: 700; margin: 0;">\$${Number(monthlySavings).toFixed(0)}<span style="font-size: 18px; color: #64748b;">/mo</span></p>
-        <p style="color: #64748b; font-size: 13px; margin: 8px 0 0;">That's \$${(Number(monthlySavings) * 12).toFixed(0)}/year</p>
+        <p style="color: #00D4FF; font-size: 36px; font-weight: 700; margin: 0;">$${Number(monthlySavings).toFixed(0)}<span style="font-size: 18px; color: #64748b;">/mo</span></p>
+        <p style="color: #64748b; font-size: 13px; margin: 8px 0 0;">That's $${(Number(monthlySavings) * 12).toFixed(0)}/year</p>
       </div>
       
       <a href="${auditUrl}" style="display: block; background: #00D4FF; color: #0A0F1E; text-decoration: none; padding: 14px 24px; border-radius: 8px; font-weight: 600; font-size: 16px; text-align: center; margin: 0 0 24px;">View Full Audit Report →</a>
@@ -119,7 +124,7 @@ export async function POST(req: NextRequest) {
 
     // Mark email as sent
     if (!leadError) {
-      await supabaseAdmin
+      await supabase
         .from('leads')
         .update({ email_sent: true })
         .eq('audit_id', body.auditId)

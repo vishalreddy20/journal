@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { runAudit } from '@/lib/auditEngine';
 import { generateAuditSummary } from '@/lib/anthropic';
 import { checkRateLimit, getIp } from '@/lib/rateLimit';
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   const aiSummary = await generateAuditSummary(auditResult, auditInput);
 
   // Save to Supabase (no PII in audits table)
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseAdmin()
     .from('audits')
     .insert({
       tool_inputs: auditInput,

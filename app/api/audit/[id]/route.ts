@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
+
 
 export async function GET(
   req: NextRequest,
@@ -11,7 +12,7 @@ export async function GET(
     return NextResponse.json({ error: 'Invalid audit ID' }, { status: 400 });
   }
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseAdmin()
     .from('audits')
     .select(
       'id, audit_result, ai_summary, total_monthly_savings, total_annual_savings, total_current_spend, tool_inputs, created_at'
