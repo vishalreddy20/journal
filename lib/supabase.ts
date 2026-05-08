@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 /*
  * Supabase SQL Schema — run this in the Supabase SQL Editor:
@@ -39,14 +39,47 @@ import { createClient } from '@supabase/supabase-js';
  * CREATE POLICY "Allow insert for all" ON leads FOR INSERT WITH CHECK (true);
  */
 
-// Client-side Supabase client (anon key — safe to expose if RLS is configured)
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Lazy singletons — only created when first accessed, never at module load time.
+// This prevents Vercel build failures when env vars are not yet configured.
 
-// Server-side admin client (service role — NEVER import in client components)
-export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: SupabaseClient | null = null;
+let _supabaseAdmin: SupabaseClient | null = null;
+
+/** Client-side Supabase client (anon key — safe to expose if RLS is configured) */
+export function getSupabase(): SupabaseClient {
+  if (!_supabase) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    _supabase = createClient(url, key);
+  }
+  return _supabase;
+}
+
+/** Server-side admin client (service role — NEVER import in client components) */
+export function getSupabaseAdmin(): SupabaseClient {
+  if (!_supabaseAdmin) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+    _supabaseAdmin = createClient(url, key, {
+      auth: { persistSession: false },
+    });
+  }
+  return _supabaseAdmin;
+}
+
+// Legacy named exports for backward compatibility — lazy wrappers
+/** @deprecated Use getSupabaseAdmin() instead */
+export const supabaseAdmin = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    return getSupabaseAdmin()[prop as keyof SupabaseClient];
+  },
+});
+
+/** @deprecated Use getSupabase() instead */
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    return getSupabase()[prop as keyof SupabaseClient];
+  },
+});

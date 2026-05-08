@@ -1,7 +1,15 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { AuditResult, AuditInput } from '@/types/audit';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// Lazy — only instantiated when the function is called, not at build time
+let _anthropic: Anthropic | null = null;
+function getAnthropicClient(): Anthropic {
+  if (!_anthropic) {
+    _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY ?? '' });
+  }
+  return _anthropic;
+}
+
 
 function buildFallback(audit: AuditResult, input: AuditInput): string {
   const topFinding = audit.findings.find(
@@ -42,7 +50,7 @@ Total potential savings: $${audit.totalMonthlySavings}/month ($${audit.totalAnnu
 Write the summary now. 100 words max.`;
 
   try {
-    const message = await client.messages.create({
+    const message = await getAnthropicClient().messages.create({
       model: 'claude-haiku-3-20240307',
       max_tokens: 200,
       messages: [{ role: 'user', content: prompt }],
