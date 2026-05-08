@@ -11,15 +11,17 @@ Find where your AI budget is leaking. Free 2-minute audit for engineering manage
 ## Screenshots & Demo
 
 Landing page · Audit form · Results with savings breakdown  
-![SpendLens Demo Walkthrough](public/demo.webp)
+<div align="center">
+  <img src="https://raw.githubusercontent.com/vishalreddy20/journal/master/public/demo.webp" alt="SpendLens Demo Walkthrough" width="800"/>
+</div>
 
 ---
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/[your-username]/spendlens
-cd spendlens
+git clone https://github.com/vishalreddy20/journal.git
+cd journal
 npm install
 cp .env.example .env.local
 # Fill in: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
