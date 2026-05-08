@@ -2,16 +2,16 @@
 
 Find where your AI budget is leaking. Free 2-minute audit for engineering managers and startup founders.
 
-**Live demo**: https://spendlens.vercel.app  
+**Live demo**: https://journal-five-lake.vercel.app  
 **Built for**: Credex Web Development Intern Round 1 Assignment  
 **Stack**: Next.js 14 · TypeScript (strict) · Tailwind CSS · Supabase · Resend · Anthropic Claude
 
 ---
 
-## Screenshots
+## Screenshots & Demo
 
 Landing page · Audit form · Results with savings breakdown  
-[Loom walkthrough: https://loom.com/share/placeholder — replace with real recording before submission]
+![SpendLens Demo Walkthrough](public/demo.webp)
 
 ---
 
