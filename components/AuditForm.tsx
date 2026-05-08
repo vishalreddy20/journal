@@ -36,8 +36,14 @@ const DEFAULT_FORM: FormState = {
 
 const STORAGE_KEY = 'spendlens_form_state';
 
+interface AuditApiResult {
+  auditId: string | null;
+  auditResult: import('@/types/audit').AuditResult;
+  aiSummary?: string;
+}
+
 interface AuditFormProps {
-  onAuditComplete: (auditId: string | null, result: AuditInput) => void;
+  onAuditComplete: (data: AuditApiResult, input: AuditInput) => void;
   onAuditLoading: (loading: boolean) => void;
 }
 
@@ -69,20 +75,20 @@ export default function AuditForm({ onAuditComplete, onAuditLoading }: AuditForm
   }, [form]);
 
   const updateTool = useCallback((toolId: ToolId, updates: Partial<ToolFormState>) => {
-    setForm((prev) => ({
-      ...prev,
-      tools: {
-        ...prev.tools,
-        [toolId]: {
-          active: false,
-          plan: TOOL_PLAN_OPTIONS[toolId][0]?.value ?? '',
-          monthlySpend: '',
-          seats: '1',
-          ...prev.tools[toolId],
-          ...updates,
-        },
-      },
-    }));
+    setForm((prev) => {
+      const existing = prev.tools[toolId];
+      const merged: ToolFormState = {
+        active: existing?.active ?? false,
+        plan: existing?.plan ?? (TOOL_PLAN_OPTIONS[toolId][0]?.value ?? ''),
+        monthlySpend: existing?.monthlySpend ?? '',
+        seats: existing?.seats ?? '1',
+        ...updates,
+      };
+      return {
+        ...prev,
+        tools: { ...prev.tools, [toolId]: merged },
+      };
+    });
   }, []);
 
   const validateStep1 = () => {
@@ -156,13 +162,24 @@ export default function AuditForm({ onAuditComplete, onAuditLoading }: AuditForm
       if (!res.ok) throw new Error('Audit failed');
 
       const data = await res.json();
-      onAuditComplete(data.auditId, auditInput);
 
-      // Clear localStorage after successful audit
+      // Pass full result up — parent does not need to re-fetch
+      onAuditComplete(
+        { auditId: data.auditId ?? null, auditResult: data.auditResult, aiSummary: data.aiSummary },
+        auditInput,
+      );
+
       try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
     } catch (err) {
       console.error('Audit error:', err);
-      setErrors({ submit: 'Something went wrong. Please try again.' });
+      // Client-side fallback — still shows results even if API is completely down
+      try {
+        const { runAudit } = await import('@/lib/auditEngine');
+        const result = runAudit(auditInput);
+        onAuditComplete({ auditId: null, auditResult: result }, auditInput);
+      } catch {
+        setErrors({ submit: 'Something went wrong. Please try again.' });
+      }
     } finally {
       setSubmitting(false);
       onAuditLoading(false);

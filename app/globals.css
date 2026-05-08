@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+@theme {
+  --font-syne: 'Syne', sans-serif;
+  --font-dm-sans: 'DM Sans', sans-serif;
+  --color-cyan-400: #00D4FF;
+  --color-cyan-300: #38e8ff;
+}
+
+/* Utility classes for fonts */
+.font-syne { font-family: var(--font-syne) !important; }
+.font-dm-sans { font-family: var(--font-dm-sans) !important; }
+
 :root {
   --font-syne: 'Syne', sans-serif;
   --font-dm-sans: 'DM Sans', sans-serif;

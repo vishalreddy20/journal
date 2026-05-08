@@ -13,6 +13,12 @@ interface AuditData {
   aiSummary?: string;
 }
 
+interface AuditApiResult {
+  auditId: string | null;
+  auditResult: AuditResult;
+  aiSummary?: string;
+}
+
 export default function HomePage() {
   const [auditData, setAuditData] = useState<AuditData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -23,26 +29,14 @@ export default function HomePage() {
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleAuditComplete = async (auditId: string | null, auditInput: AuditInput) => {
-    // Fetch the full result from the API (which ran the engine server-side)
-    if (auditId) {
-      try {
-        const res = await fetch(`/api/audit/${auditId}`);
-        const data = await res.json();
-        setAuditData({
-          auditId,
-          auditResult: data.audit_result,
-          auditInput,
-          aiSummary: data.ai_summary,
-        });
-      } catch {
-        // Fallback: run audit locally for display
-        const { runAudit } = await import('@/lib/auditEngine');
-        const result = runAudit(auditInput);
-        setAuditData({ auditId, auditResult: result, auditInput });
-      }
-    }
-
+  // Called by AuditForm with the full API result — no second fetch needed
+  const handleAuditComplete = (data: AuditApiResult, auditInput: AuditInput) => {
+    setAuditData({
+      auditId: data.auditId,
+      auditResult: data.auditResult,
+      auditInput,
+      aiSummary: data.aiSummary,
+    });
     setTimeout(() => {
       resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);

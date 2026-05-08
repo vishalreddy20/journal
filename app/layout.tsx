@@ -15,6 +15,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://spendlens.vercel.app'),
   title: 'SpendLens — AI Spend Audit for Startups',
   description:
     'Find where your AI budget is leaking. Free 2-minute audit for engineering teams. No signup required. See your savings instantly.',
